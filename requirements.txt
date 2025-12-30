@@ -1,0 +1,15 @@
+langchain>=0.0.200
+langchain-google-genai
+google-generativeai
+python-dotenv
+faiss-cpu
+langchain-community
+numpy
+fastapi
+uvicorn[standard]
+aiofiles
+sqlalchemy
+pypdf
+python-pptx
+bcrypt
+reportlab

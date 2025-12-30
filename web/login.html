@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitchdeck AI - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+
+        <!-- Left Column: Branding (Visible on medium screens and up) -->
+        <div class="hidden md:flex md:w-1/2 bg-gradient-to-b from-purple-600 to-indigo-700 text-white flex-col items-center justify-center p-12 text-center">
+            <div class="max-w-md">
+                <!-- Logo and App Name -->
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <div class="w-16 h-16">
+                        <!-- SVG Logo -->
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="50" fill="white" fill-opacity="0.2"/>
+                            <path d="M50 0C22.3858 0 0 22.3858 0 50H50V0Z" fill="white"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-5xl font-bold">Pitchdeck AI</h1>
+                </div>
+                <!-- Tagline -->
+                <p class="text-2xl text-purple-200 mt-4">
+                    Perfect your pitch, powered by artificial intelligence
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Column: Form (Full width on mobile, half on desktop) -->
+        <div class="w-full md:w-1/2 flex items-center justify-center p-8">
+            <div class="max-w-md w-full space-y-8">
+                
+                <!-- Mobile Header (Visible on small screens) -->
+                <div class="text-center md:hidden">
+                    <div class="flex items-center justify-center gap-3 mb-2">
+                        <div class="w-10 h-10 text-purple-600">
+                             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="50" fill="currentColor" fill-opacity="0.1"/>
+                                <path d="M50 0C22.3858 0 0 22.3858 0 50H50V0Z" fill="currentColor" class="text-purple-600"/>
+                            </svg>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900">Pitchdeck AI</h1>
+                    </div>
+                    <p class="text-gray-600">Welcome! Please sign up or log in.</p>
+                </div>
+
+                <!-- Desktop Header -->
+                 <div class="text-left hidden md:block">
+                     <h2 class="text-3xl font-extrabold text-gray-900">Get Started</h2>
+                     <p class="mt-2 text-sm text-gray-600">Create an account or log in to continue.</p>
+                 </div>
+
+                <!-- Form -->
+                <form id="loginForm" class="mt-8 space-y-6">
+                    <div class="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label for="email" class="sr-only">Email address</label>
+                            <input id="email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
+                        </div>
+                        <div>
+                            <label for="password" class="sr-only">Password</label>
+                            <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="w-full space-y-4 pt-4">
+                        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition duration-300">
+                            Log In
+                        </button>
+                        <a href="./signup.html" class="group relative w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 text-center">
+                            Create Account
+                        </a>
+                        <div id="loginStatus" class="text-sm text-center text-gray-600"></div>
+                    </div>
+                </form>
+
+                <!-- Terms of Service -->
+                <p class="text-xs text-center text-gray-500 mt-6 px-4">
+                    By signing up, you agree to the
+                    <a href="#" class="font-medium text-purple-600 hover:text-purple-500">Terms of Service</a> and <a href="#" class="font-medium text-purple-600 hover:text-purple-500">Privacy Policy</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script>
+    // Handle login via POST /api/login
+    const form = document.getElementById('loginForm');
+    const statusBox = document.getElementById('loginStatus');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusBox.textContent = 'Signing in...';
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Login failed (${res.status})`);
+            }
+            const data = await res.json();
+            // Persist user info for later steps
+            localStorage.setItem('userId', String(data.user_id));
+            if (data.name) localStorage.setItem('userName', data.name);
+            // Continue to upload step
+            window.location.href = './upload.html';
+        } catch (err) {
+            statusBox.textContent = err.message || String(err);
+            statusBox.classList.remove('text-gray-600');
+            statusBox.classList.add('text-red-600');
+        }
+    });
+</script>
+</html>

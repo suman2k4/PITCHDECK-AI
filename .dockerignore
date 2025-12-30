@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.env
+uploads/
+input/faiss_index/
+output_chunks/
+outputs/

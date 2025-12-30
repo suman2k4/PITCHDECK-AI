@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitchdeck AI - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+
+        <!-- Left Column: Branding -->
+        <div class="hidden md:flex md:w-1/2 bg-gradient-to-b from-purple-600 to-indigo-700 text-white flex-col items-center justify-center p-12 text-center">
+            <div class="max-w-md">
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <div class="w-16 h-16">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="50" fill="white" fill-opacity="0.2"/>
+                            <path d="M50 0C22.3858 0 0 22.3858 0 50H50V0Z" fill="white"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-5xl font-bold">Pitchdeck AI</h1>
+                </div>
+                <p class="text-2xl text-purple-200 mt-4">
+                    Perfect your pitch, powered by artificial intelligence
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Column: Home Content -->
+        <div class="w-full md:w-1/2 flex items-center justify-center p-8">
+            <div class="max-w-md w-full space-y-8">
+                
+                <!-- Mobile Header -->
+                <div class="text-center md:hidden">
+                    <div class="flex items-center justify-center gap-3 mb-2">
+                        <div class="w-10 h-10 text-purple-600">
+                             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="50" fill="currentColor" fill-opacity="0.1"/>
+                                <path d="M50 0C22.3858 0 0 22.3858 0 50H50V0Z" fill="currentColor" class="text-purple-600"/>
+                            </svg>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900">Pitchdeck AI</h1>
+                    </div>
+                    <p class="text-gray-600">Welcome! Start your pitch practice session.</p>
+                </div>
+
+                <!-- Desktop Header -->
+                 <div class="text-left hidden md:block">
+                     <h2 class="text-3xl font-extrabold text-gray-900">Welcome to Pitchdeck AI</h2>
+                     <p class="mt-2 text-sm text-gray-600">Upload your pitch deck and practice with AI-powered VC personas.</p>
+                 </div>
+
+                <!-- Action Buttons -->
+                <div class="w-full space-y-4 pt-4">
+                    <a id="primaryCta" href="./login.html" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition duration-300">
+                        Get Started
+                    </a>
+                    <a id="secondaryCta" href="./signup.html" class="group relative w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300">
+                        Sign Up
+                    </a>
+                </div>
+
+                <!-- Features -->
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-900">Features:</h3>
+                    <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                        <li>• Adaptive Persona-Based Interrogation (APBI) Algorithm</li>
+                        <li>• Realistic VC Q&A simulations</li>
+                        <li>• RAG-powered context retrieval</li>
+                        <li>• Personalized feedback and scoring</li>
+                    </ul>
+                </div>
+
+                <!-- Terms of Service -->
+                <p class="text-xs text-center text-gray-500 mt-6 px-4">
+                    By using Pitchdeck AI, you agree to the
+                    <a href="#" class="font-medium text-purple-600 hover:text-purple-500">Terms of Service</a> and <a href="#" class="font-medium text-purple-600 hover:text-purple-500">Privacy Policy</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script>
+    // Adapt the primary CTA based on local session state to match the rest of the flow
+    (function() {
+        try {
+            const userId = localStorage.getItem('userId');
+            const sessionId = localStorage.getItem('sessionId');
+            const persona = localStorage.getItem('persona');
+            const primary = document.getElementById('primaryCta');
+            const secondary = document.getElementById('secondaryCta');
+
+            if (userId && sessionId) {
+                // If persona already selected, continue to session chat; otherwise, go to persona selection
+                const target = persona ? './session.html' : './persona.html';
+                primary.textContent = 'Continue Session';
+                primary.setAttribute('href', target);
+                // Secondary leads to upload in case they want to start another session
+                secondary.textContent = 'Upload Another Deck';
+                secondary.setAttribute('href', './upload.html');
+            } else if (userId) {
+                // Logged in but no session yet
+                primary.textContent = 'Upload Pitch Deck';
+                primary.setAttribute('href', './upload.html');
+                secondary.textContent = 'Sign Out';
+                secondary.setAttribute('href', './login.html');
+            } else {
+                // Default: not logged in
+                primary.textContent = 'Get Started';
+                primary.setAttribute('href', './login.html');
+                secondary.textContent = 'Sign Up';
+                secondary.setAttribute('href', './signup.html');
+            }
+        } catch (e) {
+            // Fail silently; default links remain
+        }
+    })();
+</script>
+</html>

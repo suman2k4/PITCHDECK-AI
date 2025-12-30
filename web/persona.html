@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitchdeck AI - Select Persona</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom style for selected card */
+        .persona-card.selected {
+            border-color: #8B5CF6; /* purple-500 */
+            background-color: #F5F3FF; /* purple-50 */
+            transform: scale(1.02);
+        }
+        .persona-card.selected .icon {
+            color: #7C3AED; /* purple-600 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+
+        <!-- Left Column: Branding -->
+        <div class="hidden md:flex md:w-1/2 bg-gradient-to-b from-purple-600 to-indigo-700 text-white flex-col items-center justify-center p-12 text-center">
+            <div class="max-w-md">
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <div class="w-16 h-16">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="50" fill="white" fill-opacity="0.2"/>
+                            <path d="M50 0C22.3858 0 0 22.3858 0 50H50V0Z" fill="white"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-5xl font-bold">Pitchdeck AI</h1>
+                </div>
+                <p class="text-2xl text-purple-200 mt-4">
+                    Perfect your pitch, powered by artificial intelligence
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Column: Persona Selection -->
+        <div class="w-full md:w-1/2 flex items-center justify-center p-8">
+            <div class="max-w-md w-full">
+                
+                <div class="text-center mb-10">
+                                         <h2 class="text-3xl font-extrabold text-gray-900">Select Your VC Persona</h2>
+                                         <p class="mt-2 text-sm text-gray-600">Choose an investor profile to start the Q&A.<br>
+                                         <label class="inline-flex items-center mt-4">
+                                             <input type="checkbox" id="baseline-toggle" class="form-checkbox h-5 w-5 text-purple-600">
+                                             <span class="ml-2 text-sm text-gray-700">Baseline Generic Q&A Mode</span>
+                                         </label>
+                                         </p>
+                </div>
+
+                <!-- Persona Cards Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- SaaS Guru -->
+                    <div class="persona-card border border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-1" onclick="selectPersona(this)">
+                        <div class="icon text-gray-500 mb-4">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">SaaS Guru</h3>
+                        <p class="text-sm text-gray-500 mt-1">Experienced in software as a service.</p>
+                    </div>
+
+                    <!-- Deep Tech Skeptic -->
+                    <div class="persona-card border border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-1" onclick="selectPersona(this)">
+                         <div class="icon text-gray-500 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V4m0 16v-2M8 12a4 4 0 118 0 4 4 0 01-8 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">Deep Tech Skeptic</h3>
+                        <p class="text-sm text-gray-500 mt-1">Cautious about highly technical ventures.</p>
+                    </div>
+
+                    <!-- Early-Stage Angel -->
+                    <div class="persona-card border border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-1" onclick="selectPersona(this)">
+                         <div class="icon text-gray-500 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">Early-Stage Angel</h3>
+                        <p class="text-sm text-gray-500 mt-1">Invests in early stage startups.</p>
+                    </div>
+
+                    <!-- Growth Investor -->
+                    <div class="persona-card border border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-1" onclick="selectPersona(this)">
+                        <div class="icon text-gray-500 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">Growth Investor</h3>
+                        <p class="text-sm text-gray-500 mt-1">Focused on scaling companies.</p>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="w-full pt-10">
+                    <button id="continue-btn" type="button" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition duration-300 disabled:bg-purple-300 disabled:cursor-not-allowed" disabled>
+                        Start Session
+                    </button>
+                </div>
+                
+                 <div class="text-center mt-4">
+                     <a href="./upload.html" class="text-sm font-medium text-purple-600 hover:text-purple-500"> &larr; Back to Upload</a>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/app.js"></script>
+    <script>
+        // Fallback shim: if app.js didn't attach setPersona, define it here
+        if (typeof window.setPersona !== 'function') {
+            console.warn('[persona] window.setPersona missing; installing inline fallback');
+            window.setPersona = async function setPersona(sessionId, persona) {
+                const res = await fetch('/api/set_persona', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId, persona })
+                });
+                if (!res.ok) throw new Error('Persona set failed');
+                return await res.json();
+            }
+        }
+        const continueBtn = document.getElementById('continue-btn');
+        const personaCards = document.querySelectorAll('.persona-card');
+        const baselineToggle = document.getElementById('baseline-toggle');
+        let selectedPersona = null;
+
+        function selectPersona(selectedCard) {
+            personaCards.forEach(card => card.classList.remove('selected'));
+            selectedCard.classList.add('selected');
+            continueBtn.disabled = false;
+            selectedPersona = selectedCard.querySelector('h3').textContent;
+        }
+
+        continueBtn.addEventListener('click', async () => {
+            // If baseline toggle is checked, use 'generic' persona
+            let personaToSet = baselineToggle.checked ? 'generic' : selectedPersona;
+            if (!personaToSet) return;
+            // Get sessionId from localStorage (assume set after upload)
+            const sessionId = localStorage.getItem('sessionId');
+            if (!sessionId) {
+                alert('Session not found. Please upload your pitch deck first.');
+                window.location.href = './upload.html';
+                return;
+            }
+            continueBtn.disabled = true;
+            continueBtn.textContent = 'Setting Persona...';
+            try {
+                // Call setPersona from app.js
+                const res = await window.setPersona(sessionId, personaToSet);
+                // Optionally store persona in localStorage
+                localStorage.setItem('persona', personaToSet);
+                // Redirect to session.html
+                window.location.href = './session.html';
+            } catch (e) {
+                alert('Failed to set persona: ' + e);
+                continueBtn.disabled = false;
+                continueBtn.textContent = 'Start Session';
+            }
+        });
+    </script>
+
+</body>
+</html>
