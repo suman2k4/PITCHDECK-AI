@@ -80,12 +80,13 @@
                         </div>
                     </div>
                     <div class="relative">
-                        <textarea id="user-input" class="w-full p-3 pr-20 rounded-lg border border-gray-300 focus:ring-purple-500 focus:border-purple-500 transition" rows="2" placeholder="Type your answer..."></textarea>
-                                                <div class="absolute top-1/2 right-3 transform -translate-y-1/2 flex gap-2">
-                                                    <button id="get-hint" class="bg-gray-200 text-gray-800 font-semibold py-2 px-3 rounded-lg hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500">Get hint</button>
-                                                    <button id="submit-answer" class="bg-purple-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500">Submit</button>
-                                                </div>
+                        <textarea id="user-input" class="w-full p-3 pr-20 rounded-lg border border-gray-300 focus:ring-purple-500 focus:border-purple-500 transition" rows="2" placeholder="Type your answer..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();document.getElementById('submit-answer').click();}"></textarea>
+                        <div class="absolute top-1/2 right-3 transform -translate-y-1/2 flex gap-2">
+                            <button id="get-hint" class="bg-gray-200 text-gray-800 font-semibold py-2 px-3 rounded-lg hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500">💡 Hint</button>
+                            <button id="submit-answer" class="bg-purple-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500">Send</button>
+                        </div>
                     </div>
+                    <p class="text-xs text-gray-500 mt-2">💡 Press Enter to send, Shift+Enter for new line</p>
                 </div>
             </div>
              <div class="text-center mt-4">
@@ -151,41 +152,43 @@ function addMessage(sender, text) {
 submitBtn.addEventListener('click', async () => {
     const answer = userInput.value.trim();
     if (!answer) return;
+    
+    // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="animate-pulse">Thinking...</span>';
+    
     addMessage('You', answer);
     chatHistory[chatHistory.length-1].answer = answer;
+    
     // Optional: coach evaluation on last Q/A
     const lastQ = chatHistory[chatHistory.length-1].question;
-        if (!toggleCoach || toggleCoach.checked) {
+    if (!toggleCoach || toggleCoach.checked) {
         try {
             const coach = await window.getCoach(sessionId, lastQ, answer);
             if (coach && coach.suggestion) {
-                addMessage('VC', `Coach: ${coach.suggestion}`);
+                addMessage('VC', `💡 Coach: ${coach.suggestion}`);
             }
         } catch(e) {}
     }
     userInput.value = '';
-        // If the founder said "I don't know", do not advance immediately; encourage with a guiding follow-up
-        const lower = answer.toLowerCase();
-        if (/(i\s*do(n'?| n)?t\s*know|idk|not\s+sure|no\s+idea)\b/.test(lower)) {
-                // Ask server for a targeted follow-up without advancing history
-                const qa = await window.nextQA(sessionId, chatHistory, { hints: !toggleHints || toggleHints.checked });
-                addMessage('VC', qa.question);
-                lastSources = qa.sources || [];
-                if (qa.assistant_suggestion && (!toggleHints || toggleHints.checked)) {
-                        addMessage('VC', `Hint: ${qa.assistant_suggestion}`);
-                }
-                // Replace last question with the new guiding follow-up for the next answer
-                chatHistory.push({question: qa.question, persona, context: {}});
-                return;
+    
+    // Get next question
+    try {
+        const qa = await window.nextQA(sessionId, chatHistory, { hints: !toggleHints || toggleHints.checked });
+        addMessage('VC', qa.question);
+        lastSources = qa.sources || [];
+        if (qa.assistant_suggestion && (!toggleHints || toggleHints.checked)) {
+            addMessage('VC', `💡 Hint: ${qa.assistant_suggestion}`);
         }
-        // Get next question normally
-    const qa = await window.nextQA(sessionId, chatHistory, { hints: !toggleHints || toggleHints.checked });
-    addMessage('VC', qa.question);
-    lastSources = qa.sources || [];
-    if (qa.assistant_suggestion && (!toggleHints || toggleHints.checked)) {
-        addMessage('VC', `Hint: ${qa.assistant_suggestion}`);
+        chatHistory.push({question: qa.question, persona, context: {}});
+    } catch(e) {
+        addMessage('VC', 'Let me rephrase that. Can you tell me more about your approach to this challenge?');
+        chatHistory.push({question: 'Tell me more about your approach to this challenge.', persona, context: {}});
     }
-    chatHistory.push({question: qa.question, persona, context: {}});
+    
+    // Re-enable submit button
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send';
 });
 
 if (hintBtn) {

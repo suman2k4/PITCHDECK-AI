@@ -1,6 +1,9 @@
 import faiss
 import numpy as np
 from typing import Any
+from functools import lru_cache
+import hashlib
+import re
 try:
     from langchain_google_genai import GoogleGenerativeAIEmbeddings  # optional
 except Exception:
@@ -38,6 +41,10 @@ _CACHED_INDEX_PATH: str | None = None
 _CACHED_INDEX: Any | None = None
 _CACHED_TEXTS: list[str] | None = None
 
+# Caching for embeddings and LLM responses to reduce API calls
+_EMBED_CACHE = {}
+_LLM_RESPONSE_CACHE = {}
+
 
 def load_index_and_texts(index_dir: str):
     global _CACHED_INDEX_PATH, _CACHED_INDEX, _CACHED_TEXTS
@@ -73,11 +80,24 @@ def load_index_and_texts(index_dir: str):
 
 
 def embed_query(query: str):
+    # Check cache first to save API calls
+    cache_key = hashlib.md5(query.encode()).hexdigest()
+    if cache_key in _EMBED_CACHE:
+        logging.info(f"Using cached embedding for query: {query[:50]}...")
+        return _EMBED_CACHE[cache_key]
+    
     if not FORCE_OFFLINE and API_KEY and GoogleGenerativeAIEmbeddings is not None:
         try:
             emb = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL, google_api_key=API_KEY)
             v = emb.embed_query(query)
-            return np.array(v).astype('float32')
+            result = np.array(v).astype('float32')
+            # Cache the result
+            _EMBED_CACHE[cache_key] = result
+            # Limit cache size to prevent memory issues
+            if len(_EMBED_CACHE) > 500:
+                # Remove oldest entry
+                _EMBED_CACHE.pop(next(iter(_EMBED_CACHE)))
+            return result
         except Exception as e:
             logging.warning(f"Embedding API failed, using offline fallback: {e}")
     # Dry-run fallback: deterministic pseudo-random vector so searches work without API
@@ -198,18 +218,128 @@ def generate_question(persona: str = "generic_baseline", context: str = "", hist
     prompt_template = load_persona_prompt(persona)
     prompt = prompt_template.format(context=context[:2000], history=history[:1000])
     
+    # Check cache to save API calls
+    cache_key = hashlib.md5(f"{persona}:{context[:500]}:{history[:500]}".encode()).hexdigest()
+    if cache_key in _LLM_RESPONSE_CACHE:
+        logging.info(f"Using cached question for persona: {persona}")
+        return _LLM_RESPONSE_CACHE[cache_key]
+    
     if not FORCE_OFFLINE and API_KEY and genai is not None:
         try:
             model_name = os.getenv('GEMINI_MODEL', 'gemini-2.5-pro')
             model = genai.GenerativeModel(model_name, generation_config={"temperature": float(os.getenv("LLM_TEMPERATURE", "0.4"))})
             resp = model.generate_content(prompt)
             if hasattr(resp, 'text') and resp.text:
-                return resp.text.strip()
+                question = resp.text.strip()
+                # Cache successful response
+                _LLM_RESPONSE_CACHE[cache_key] = question
+                if len(_LLM_RESPONSE_CACHE) > 200:
+                    _LLM_RESPONSE_CACHE.pop(next(iter(_LLM_RESPONSE_CACHE)))
+                return question
             return str(resp).strip()
         except Exception as e:
-            logging.warning(f"LLM call for question generation failed: {e}. Falling back to generic question.")
-    # Fallback: a generic challenging question
-    return "What is the biggest risk to your business model, and how do you plan to mitigate it?"
+            logging.warning(f"LLM call for question generation failed: {e}. Using intelligent fallback.")
+    
+    # Intelligent fallback based on conversation history and persona
+    return _generate_intelligent_fallback_question(persona, context, history)
+
+
+def _generate_intelligent_fallback_question(persona: str, context: str, history: str) -> str:
+    """Generate contextual questions based on conversation history when API is unavailable."""
+    
+    # Analyze the conversation history
+    history_lower = history.lower()
+    
+    # Extract last answer to build on
+    last_answer_match = re.search(r'A:\s*(.+?)(?=\nQ:|$)', history, re.DOTALL)
+    last_answer = last_answer_match.group(1).strip() if last_answer_match else ""
+    last_answer_lower = last_answer.lower()
+    
+    # Count how many questions have been asked
+    question_count = history.count('Q:')
+    
+    # Persona-specific intelligent question sequences
+    persona_questions = {
+        'saas_guru': [
+            "Let's start with the basics - what's your current MRR or ARR, and what's driving that growth?",
+            "How do you acquire customers? Walk me through your CAC and how it compares to LTV.",
+            "Tell me about your churn rate. What percentage of customers leave each month, and why?",
+            "What's your pricing strategy? Have you tested different pricing tiers or models?",
+            "How does your product create network effects or switching costs that lock in customers?"
+        ],
+        'deep_tech_skeptic': [
+            "What's the core technical innovation here? Convince me this isn't just an incremental improvement.",
+            "Who are the technical experts or institutions validating your approach? Any partnerships?",
+            "What are the biggest technical risks that could derail this project, and how are you mitigating them?",
+            "How defensible is your technology? Do you have patents filed or trade secrets?",
+            "What regulatory hurdles do you face, and what's your realistic timeline to market?"
+        ],
+        'early_stage_angel': [
+            "What traction have you achieved so far? Even if it's early, what validates that people want this?",
+            "How much runway do you have, and what specific milestones will you hit before needing more capital?",
+            "Why is your team uniquely positioned to win? What's your unfair advantage?",
+            "What keeps you up at night? What's the biggest risk to your business right now?",
+            "If I gave you an extra $50K today, what would you spend it on to move the needle most?"
+        ],
+        'growth_investor': [
+            "Walk me through your go-to-market strategy. What channels are working best?",
+            "How do you plan to scale from where you are to $10M ARR? What needs to change?",
+            "What are your unit economics at scale? When do you become profitable?",
+            "Who are your top 3 competitors, and why will you win market share from them?",
+            "What operational bottlenecks will you hit as you scale, and how are you preparing?"
+        ],
+        'generic_baseline': [
+            "Tell me about your target market. Who exactly are your ideal customers?",
+            "What specific problem are you solving, and how painful is it for your customers?",
+            "How do you make money? Walk me through your business model.",
+            "What's your competitive advantage? Why will you win this market?",
+            "What are the key risks to your business, and how are you managing them?"
+        ]
+    }
+    
+    # Get persona-specific questions
+    questions = persona_questions.get(persona, persona_questions['generic_baseline'])
+    
+    # Adaptive follow-up based on last answer content
+    if "don't know" in last_answer_lower or "not sure" in last_answer_lower or "no idea" in last_answer_lower:
+        return "That's totally fine - let's break it down. What data or metrics ARE you tracking closely right now, and what do they tell you?"
+    
+    elif "revenue" in last_answer_lower or "mrr" in last_answer_lower or "arr" in last_answer_lower:
+        if "margin" not in history_lower:
+            return "Good! Now tell me about your margins. What are your gross margins, and how do they improve as you scale?"
+        else:
+            return "Great context on revenue. How predictable is this? What percentage of revenue is recurring vs. one-time?"
+    
+    elif "customer" in last_answer_lower or "user" in last_answer_lower:
+        if "retention" not in history_lower and "churn" not in history_lower:
+            return "Interesting. Tell me about retention - what percentage of customers are still with you after 6 months?"
+        else:
+            return "Got it. What do your best customers have in common? Any patterns in who succeeds with your product?"
+    
+    elif "team" in last_answer_lower or "founder" in last_answer_lower:
+        return "Your team sounds solid. What key roles are you still hiring for, and why are those critical right now?"
+    
+    elif "market" in last_answer_lower or "tam" in last_answer_lower:
+        if "competition" not in history_lower:
+            return "Market sizing is helpful. Now tell me about competition - who else is going after this market and how are you different?"
+        else:
+            return "Good market analysis. How much of that addressable market can you realistically capture in 3 years?"
+    
+    elif "product" in last_answer_lower or "feature" in last_answer_lower:
+        return "Tell me about your roadmap. What's the most important feature you're building next, and why?"
+    
+    elif "competitor" in last_answer_lower or "competition" in last_answer_lower:
+        return "Understood. What would make a customer choose you over the incumbent? What's your wedge into the market?"
+    
+    elif "fundraise" in last_answer_lower or "capital" in last_answer_lower or "investment" in last_answer_lower:
+        return "Let's talk about deployment. If you raise this round, what are your milestones for the next 12-18 months?"
+    
+    elif len(last_answer) < 20:
+        return "Can you elaborate on that? I'd love more details to understand your thinking."
+    
+    # Default: use question sequence based on conversation depth
+    question_index = min(question_count, len(questions) - 1)
+    return questions[question_index]
 
 
 def evaluate_answer(question: str, answer: str, context_text: str = "") -> dict:
